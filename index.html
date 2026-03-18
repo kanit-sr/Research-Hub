@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════
+       HEADER
+  ══════════════════════════════════════ -->
+  <header>
+    <div class="container">
+      <div class="header-inner">
+
+        <div class="logo">
+          <span class="logo-text">Research Hub</span>
+          <span class="logo-stamp">est. today</span>
+        </div>
+
+        <nav class="cat-tabs">
+          <button class="cat-tab" data-cat="science" onclick="scrollToSection('science', event)">Science</button>
+          <button class="cat-tab" data-cat="history" onclick="scrollToSection('history', event)">History</button>
+          <button class="cat-tab" data-cat="tech"    onclick="scrollToSection('tech', event)">Tech & AI</button>
+          <button class="cat-tab" data-cat="news"    onclick="scrollToSection('news', event)">News</button>
+          <button class="cat-tab" data-cat="health"  onclick="scrollToSection('health', event)">Health</button>
+          <button class="cat-tab" data-cat="space"   onclick="scrollToSection('space', event)">Space</button>
+          <button class="cat-tab"                    onclick="scrollToSection('tools', event)">Tools</button>
+          <button class="cat-tab"                    onclick="scrollToSection('notes', event)">Notes</button>
+        </nav>
+
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ══════════════════════════════════════
+       HERO / SEARCH
+  ══════════════════════════════════════ -->
+  <section class="hero">
+    <div class="container">
+
+      <p class="hero-eyebrow">your research command centre</p>
+
+      <h1 class="hero-title">
+        Know<br><em>Everything.</em>
+      </h1>
+
+      <p class="hero-sub">Search across sources. Save ideas. Never lose a thread. Press ⌘K to focus.</p>
+
+      <div class="search-wrap">
+
+        <div class="search-bar">
+          <span class="search-icon">⌕</span>
+          <input
+            type="text"
+            id="main-search"
+            placeholder="Search anything..."
+            autocomplete="off"
+            onkeydown="if(event.key==='Enter') launchSearch(this.value)"
+          >
+          <button class="search-btn" onclick="launchSearch(document.getElementById('main-search').value)">
+            Search →
+          </button>
+        </div>
+
+        <div class="source-launcher">
+          <button class="src-btn" onclick="searchSource('google', document.getElementById('main-search').value)">
+            <span class="dot" style="background:#4285f4"></span> Google
+          </button>
+          <button class="src-btn" onclick="searchSource('wikipedia', document.getElementById('main-search').value)">
+            <span class="dot" style="background:#8fa070"></span> Wikipedia
+          </button>
+          <button class="src-btn" onclick="searchSource('scholar', document.getElementById('main-search').value)">
+            <span class="dot" style="background:var(--science)"></span> Scholar
+          </button>
+          <button class="src-btn" onclick="searchSource('youtube', document.getElementById('main-search').value)">
+            <span class="dot" style="background:var(--news)"></span> YouTube
+          </button>
+          <button class="src-btn" onclick="searchSource('arxiv', document.getElementById('main-search').value)">
+            <span class="dot" style="background:var(--space)"></span> arXiv
+          </button>
+          <button class="src-btn" onclick="searchSource('news', document.getElementById('main-search').value)">
+            <span class="dot" style="background:var(--history)"></span> News
+          </button>
+          <button class="src-btn" onclick="searchSource('pubmed', document.getElementById('main-search').value)">
+            <span class="dot" style="background:var(--health)"></span> PubMed
+          </button>
+          <button class="src-btn" onclick="searchSource('maps', document.getElementById('main-search').value)">
+            <span class="dot" style="background:var(--tech)"></span> Maps
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════════════
+       MAIN CONTENT
+  ══════════════════════════════════════ -->
+  <div class="container">
+
+    <!-- ── QUICK TOOLS ── -->
+    <div class="section-label" id="tools">Quick Tools</div>
+
+    <div class="main-grid">
+
+      <!-- Dictionary -->
+      <div class="card" style="grid-column: span 2">
+        <div class="card-header">
+          <span class="card-title">Dictionary</span>
+          <span class="card-badge">definitions</span>
+        </div>
+        <div class="accent-bar" style="background: var(--health)"></div>
+
+        <div class="dict-input-row">
+          <input
+            type="text"
+            class="tool-input"
+            id="dict-input"
+            placeholder="Look up a word..."
+            onkeydown="if(event.key==='Enter') lookupWord()"
+          >
+          <button class="tool-btn" onclick="lookupWord()">Define →</button>
+        </div>
+
+        <div class="dict-result" id="dict-result">
+          <div class="placeholder">Enter a word above to see its definition</div>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Timeline</span>
+          <span class="card-badge">history</span>
+        </div>
+        <div class="accent-bar" style="background: var(--history)"></div>
+
+        <div class="timeline-input-row">
+          <input
+            type="text"
+            class="tool-input"
+            id="tl-input"
+            placeholder="e.g. space exploration, physics…"
+            onkeydown="if(event.key==='Enter') loadTimeline()"
+          >
+          <button class="tool-btn" onclick="loadTimeline()">Go →</button>
+        </div>
+
+        <div id="tl-result">
+          <div style="font-size:12px;color:var(--text3);text-align:center;padding:22px 0">
+            Enter a topic to see key dates
+          </div>
+        </div>
+      </div>
+
+      <!-- Saved Topics -->
+      <div class="card" style="grid-column: span 2" id="topics-card">
+        <div class="card-header">
+          <span class="card-title">Saved Topics</span>
+          <span class="card-badge" id="topics-count">0 topics</span>
+        </div>
+
+        <div class="topic-input-row">
+          <input
+            type="text"
+            class="tool-input"
+            id="topic-input"
+            placeholder="Add a research topic..."
+          >
+          <button class="tool-btn" onclick="addTopic()">+ Add</button>
+        </div>
+
+        <div class="topics-list" id="topics-list">
+          <span style="font-size:12px;color:var(--text3)">No topics saved yet</span>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card" id="notes">
+        <div class="card-header">
+          <span class="card-title">Research Notes</span>
+          <span class="card-badge">auto-saved</span>
+        </div>
+
+        <textarea
+          id="notes-area"
+          placeholder="Jot down thoughts, links, questions, quotes…"
+        ></textarea>
+
+        <div class="notes-footer">
+          <span class="notes-status" id="notes-status"></span>
+          <button class="clear-btn" onclick="clearNotes()">clear notes</button>
+        </div>
+      </div>
+
+    </div><!-- end main-grid -->
+
+
+    <!-- ── RESEARCH SOURCES ── -->
+    <div class="section-label" id="science">Research Sources</div>
+
+    <div class="main-grid">
+      <div class="sources-row">
+
+        <!-- Science & Biology -->
+        <div class="cat-card" id="science-card">
+          <div class="cat-card-icon">🔬</div>
+          <div class="cat-card-name" style="color:var(--science)">Science</div>
+          <div class="cat-card-links">
+            <a class="cat-link" href="https://pubmed.ncbi.nlm.nih.gov" target="_blank">PubMed</a>
+            <a class="cat-link" href="https://www.nature.com"           target="_blank">Nature</a>
+            <a class="cat-link" href="https://www.science.org"          target="_blank">Science Mag</a>
+            <a class="cat-link" href="https://phys.org"                 target="_blank">Phys.org</a>
+            <a class="cat-link" href="https://www.sciencedaily.com"     target="_blank">ScienceDaily</a>
+          </div>
+        </div>
+
+        <!-- History & Culture -->
+        <div class="cat-card" id="history">
+          <div class="cat-card-icon">📜</div>
+          <div class="cat-card-name" style="color:var(--history)">History</div>
+          <div class="cat-card-links">
+            <a class="cat-link" href="https://www.jstor.org"          target="_blank">JSTOR</a>
+            <a class="cat-link" href="https://www.britannica.com"     target="_blank">Britannica</a>
+            <a class="cat-link" href="https://www.historynet.com"     target="_blank">HistoryNet</a>
+            <a class="cat-link" href="https://www.worldhistory.org"   target="_blank">World History</a>
+            <a class="cat-link" href="https://archive.org"            target="_blank">Internet Archive</a>
+          </div>
+        </div>
+
+        <!-- Tech & AI -->
+        <div class="cat-card" id="tech">
+          <div class="cat-card-icon">⚡</div>
+          <div class="cat-card-name" style="color:var(--tech)">Tech & AI</div>
+          <div class="cat-card-links">
+            <a class="cat-link" href="https://arxiv.org"                    target="_blank">arXiv</a>
+            <a class="cat-link" href="https://news.ycombinator.com"         target="_blank">Hacker News</a>
+            <a class="cat-link" href="https://techcrunch.com"               target="_blank">TechCrunch</a>
+            <a class="cat-link" href="https://paperswithcode.com"           target="_blank">Papers w/ Code</a>
+            <a class="cat-link" href="https://huggingface.co/papers"        target="_blank">HF Papers</a>
+          </div>
+        </div>
+
+        <!-- News -->
+        <div class="cat-card" id="news">
+          <div class="cat-card-icon">📡</div>
+          <div class="cat-card-name" style="color:var(--news)">News</div>
+          <div class="cat-card-links">
+            <a class="cat-link" href="https://www.reuters.com"    target="_blank">Reuters</a>
+            <a class="cat-link" href="https://apnews.com"         target="_blank">AP News</a>
+            <a class="cat-link" href="https://www.bbc.com/news"   target="_blank">BBC News</a>
+            <a class="cat-link" href="https://news.google.com"    target="_blank">Google News</a>
+            <a class="cat-link" href="https://www.aljazeera.com"  target="_blank">Al Jazeera</a>
+          </div>
+        </div>
+
+        <!-- Health & Medicine -->
+        <div class="cat-card" id="health">
+          <div class="cat-card-icon">🩺</div>
+          <div class="cat-card-name" style="color:var(--health)">Health</div>
+          <div class="cat-card-links">
+            <a class="cat-link" href="https://www.who.int"          target="_blank">WHO</a>
+            <a class="cat-link" href="https://www.cdc.gov"          target="_blank">CDC</a>
+            <a class="cat-link" href="https://medlineplus.gov"      target="_blank">MedlinePlus</a>
+            <a class="cat-link" href="https://www.webmd.com"        target="_blank">WebMD</a>
+            <a class="cat-link" href="https://clinicaltrials.gov"   target="_blank">ClinicalTrials</a>
+          </div>
+        </div>
+
+        <!-- Space & Astronomy -->
+        <div class="cat-card" id="space">
+          <div class="cat-card-icon">🌌</div>
+          <div class="cat-card-name" style="color:var(--space)">Space</div>
+          <div class="cat-card-links">
+            <a class="cat-link" href="https://www.nasa.gov"            target="_blank">NASA</a>
+            <a class="cat-link" href="https://www.esa.int"             target="_blank">ESA</a>
+            <a class="cat-link" href="https://www.space.com"           target="_blank">Space.com</a>
+            <a class="cat-link" href="https://skyandtelescope.org"     target="_blank">Sky & Telescope</a>
+            <a class="cat-link" href="https://www.spacex.com"          target="_blank">SpaceX</a>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- end sources row -->
+
+    <div class="page-end"></div>
+
+  </div><!-- end .container -->
+
+
+  <!-- Scroll to top -->
+  <button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script src="main.js"></script>
+</body>
+</html>
