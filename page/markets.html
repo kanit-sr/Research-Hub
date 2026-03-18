@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markets — Research Hub</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    .market-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .market-status.open   { background: rgba(143,190,85,0.13); color: var(--science); border: 1px solid rgba(143,190,85,0.3); }
+    .market-status.closed { background: rgba(184,92,58,0.13);  color: var(--news);    border: 1px solid rgba(184,92,58,0.3); }
+    .market-status::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; display:block; }
+
+    .quote-block { animation: fadeUp 0.3s ease both; }
+    .quote-ticker { font-family: var(--font-head); font-size: 28px; font-weight: 900; color: var(--text); letter-spacing: -0.5px; }
+    .quote-name   { font-size: 12px; color: var(--text3); margin-bottom: 18px; letter-spacing: 0.04em; }
+    .quote-price  { font-family: var(--font-head); font-size: 42px; font-weight: 900; line-height: 1; margin-bottom: 6px; }
+    .quote-price.up { color: var(--science); } .quote-price.down { color: var(--news); } .quote-price.flat { color: var(--text2); }
+    .quote-change { font-family: var(--font-mono); font-size: 13px; font-weight: 700; margin-bottom: 24px; }
+    .quote-change.up { color: var(--science); } .quote-change.down { color: var(--news); } .quote-change.flat { color: var(--text3); }
+
+    .quote-stats {
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 1px; background: var(--border); border: 1px solid var(--border);
+      border-radius: var(--r); overflow: hidden; margin-bottom: 20px;
+    }
+    .quote-stat { background: var(--bg3); padding: 12px 14px; }
+    .quote-stat-label { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); margin-bottom: 5px; font-family: var(--font-mono); }
+    .quote-stat-value { font-family: var(--font-head); font-size: 14px; font-weight: 700; color: var(--text2); }
+
+    .profile-block { animation: fadeUp 0.3s ease both; }
+    .profile-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+    .profile-logo { width:48px; height:48px; border-radius:var(--r); border:1px solid var(--border); background:var(--bg4); object-fit:contain; flex-shrink:0; }
+    .profile-logo-placeholder { width:48px; height:48px; border-radius:var(--r); border:1px solid var(--border); background:var(--bg4); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .profile-name { font-family:var(--font-head); font-size:18px; font-weight:700; color:var(--text); margin-bottom:4px; }
+    .profile-meta { font-size:11px; color:var(--text3); letter-spacing:0.04em; }
+    .profile-tags { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+    .profile-tag { font-family:var(--font-mono); font-size:10px; padding:3px 10px; border-radius:20px; background:var(--bg4); border:1px solid var(--border); color:var(--text3); letter-spacing:0.05em; }
+    .profile-tag.ipo { color:var(--history); border-color:rgba(200,146,74,0.3); background:rgba(200,146,74,0.08); }
+    .profile-tag.cap { color:var(--space);   border-color:rgba(112,144,184,0.3); background:rgba(112,144,184,0.08); }
+    .profile-tag.ex  { color:var(--health);  border-color:rgba(95,168,136,0.3);  background:rgba(95,168,136,0.08); }
+    .profile-link { font-family:var(--font-mono); font-size:11px; color:var(--accent2); text-decoration:none; letter-spacing:0.04em; transition:color 0.15s; }
+    .profile-link:hover { color:var(--text); }
+
+    /* ── Chart ── */
+    .chart-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 16px;
+    }
+    .chart-btn {
+      font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+      padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+      background: var(--bg3); color: var(--text3); cursor: pointer; transition: all 0.15s;
+      text-transform: uppercase;
+    }
+    .chart-btn:hover  { border-color: var(--border-bright); color: var(--text2); }
+    .chart-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent2); }
+    .chart-btn.candle.active { background: rgba(200,146,74,0.1); border-color: var(--history); color: var(--history); }
+
+    .chart-wrap {
+      position: relative; background: var(--bg3);
+      border: 1px solid var(--border); border-radius: var(--r);
+      padding: 16px; height: 340px;
+    }
+    .chart-overlay {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+      background: var(--bg3); border-radius: var(--r); z-index: 10;
+      font-family: var(--font-mono); font-size: 12px; color: var(--text3);
+      gap: 10px; text-align: center; padding: 20px;
+    }
+
+    .chart-stats-row {
+      display: flex; flex-wrap: wrap; gap: 24px;
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+    }
+    .chart-stat { display: flex; flex-direction: column; gap: 3px; }
+    .chart-stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text3); }
+    .chart-stat-value { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--text2); }
+    .chart-stat-value.up   { color: var(--science); }
+    .chart-stat-value.down { color: var(--news); }
+
+    /* ── News ── */
+    .fin-news-item { padding: 14px 0; border-bottom: 1px solid var(--border); animation: fadeUp 0.25s ease both; }
+    .fin-news-item:last-child { border-bottom: none; }
+    .fin-news-category { font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--history); margin-bottom: 4px; font-family: var(--font-mono); }
+    .fin-news-headline { font-family: var(--font-head); font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.45; margin-bottom: 6px; }
+    .fin-news-summary  { font-size: 11.5px; color: var(--text3); line-height: 1.65; margin-bottom: 7px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .fin-news-footer   { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .fin-news-source   { font-size: 10px; color: var(--text3); font-family: var(--font-mono); letter-spacing: 0.04em; }
+    .fin-news-link     { font-size: 11px; color: var(--text3); text-decoration: none; transition: color 0.15s; font-family: var(--font-mono); }
+    .fin-news-link:hover { color: var(--history); }
+
+    .watchlist-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+    .wl-chip {
+      font-family: var(--font-mono); font-size: 11px; padding: 5px 12px; border-radius: 20px;
+      border: 1px solid var(--border); background: var(--bg3); color: var(--text3);
+      cursor: pointer; transition: all 0.15s; letter-spacing: 0.05em;
+    }
+    .wl-chip:hover  { border-color: var(--border-bright); color: var(--text2); }
+    .wl-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent2); }
+
+    .markets-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 700px) { .markets-grid { grid-template-columns: 1fr; } }
+
+    .section-label {
+      font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="nav-logo" href="../index.html">
+      <span class="nav-logo-text">Research Hub</span>
+      <span class="nav-logo-stamp">est. today</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="../index.html"><span class="nav-icon">⌂</span> Home</a>
+      <a class="nav-link" href="wikipedia.html"><span class="nav-icon">📖</span> Wikipedia</a>
+      <a class="nav-link" href="books.html"><span class="nav-icon">📚</span> Books</a>
+      <a class="nav-link" href="news.html"><span class="nav-icon">📡</span> News</a>
+      <a class="nav-link" href="dictionary.html"><span class="nav-icon">🔤</span> Dictionary</a>
+      <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
+      <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
+      <a class="nav-link" href="markets.html"><span class="nav-icon">📈</span> Markets</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-hero">
+    <p class="page-eyebrow">finnhub api · free key</p>
+    <h1 class="page-title">Live <em>Markets</em></h1>
+    <p class="page-sub">Stock quotes · Line & candlestick charts · Company profiles · Market news</p>
+  </div>
+
+  <!-- KEY SETUP -->
+  <div class="card" id="finnhub-setup">
+    <div class="card-header">
+      <span class="card-title">Finnhub</span>
+      <span class="api-pill" id="finnhub-pill" style="background:rgba(184,92,58,0.15);color:var(--news);border-color:var(--news)">free key needed</span>
+    </div>
+    <div class="accent-bar" style="background:var(--history)"></div>
+    <div class="setup-banner">
+      <p class="setup-title">🔑 Free API Key Required</p>
+      <p class="setup-desc">
+        Get yours free at
+        <a href="https://finnhub.io/register" target="_blank">finnhub.io/register</a>
+        — takes 1 minute, no credit card. Saved locally, never leaves your browser.
+      </p>
+      <div class="setup-input-row">
+        <input type="text" class="tool-input" id="finnhub-key-input" placeholder="Paste your Finnhub API key…">
+        <button class="tool-btn" onclick="saveFinnhubKey()">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="finnhub-main" style="display:none">
+
+    <!-- Search bar -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Search Symbol</span>
+        <span class="api-pill">✓ connected</span>
+      </div>
+      <div class="accent-bar" style="background:var(--history)"></div>
+      <div class="watchlist-row">
+        <button class="wl-chip" onclick="lookupSymbol('AAPL')">AAPL</button>
+        <button class="wl-chip" onclick="lookupSymbol('GOOGL')">GOOGL</button>
+        <button class="wl-chip" onclick="lookupSymbol('MSFT')">MSFT</button>
+        <button class="wl-chip" onclick="lookupSymbol('TSLA')">TSLA</button>
+        <button class="wl-chip" onclick="lookupSymbol('AMZN')">AMZN</button>
+        <button class="wl-chip" onclick="lookupSymbol('NVDA')">NVDA</button>
+        <button class="wl-chip" onclick="lookupSymbol('META')">META</button>
+        <button class="wl-chip" onclick="lookupSymbol('BRK.B')">BRK.B</button>
+      </div>
+      <div class="input-row">
+        <input type="text" class="tool-input" id="symbol-input"
+          placeholder="Enter ticker e.g. AAPL, TSLA, NVDA…"
+          onkeydown="if(event.key==='Enter') lookupSymbol()">
+        <button class="tool-btn" onclick="lookupSymbol()">Look Up →</button>
+        <button class="tool-btn tool-btn-sm" onclick="clearFinnhubKey()" title="Remove key">✕</button>
+      </div>
+    </div>
+
+    <!-- ══ CHART ══ -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Price Chart <span id="chart-symbol-label" style="color:var(--text3);font-size:13px;font-weight:400"></span></span>
+        <span class="card-badge">1 year · daily</span>
+      </div>
+      <div class="accent-bar" style="background:var(--science)"></div>
+
+      <!-- AV key setup -->
+      <div id="av-setup" style="display:none;margin-bottom:16px">
+        <div class="setup-banner" style="padding:16px 18px">
+          <p class="setup-title" style="font-size:13px">🔑 Alpha Vantage Key for Charts</p>
+          <p class="setup-desc" style="margin-bottom:12px">
+            Free at <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co</a>
+            — instant, no credit card. 25 chart loads/day free.
+          </p>
+          <div class="setup-input-row">
+            <input type="text" class="tool-input" id="av-key-input" placeholder="Paste Alpha Vantage key…" style="font-size:12px">
+            <button class="tool-btn" onclick="saveAvKey()">Save</button>
+          </div>
+        </div>
+      </div>
+      <div id="av-ready" style="display:none;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);letter-spacing:0.06em">📊 ALPHA VANTAGE · HOVER TO INSPECT · ~100 TRADING DAYS</span>
+        <button onclick="clearAvKey()" style="font-size:10px;color:var(--text3);background:none;border:none;cursor:pointer;font-family:var(--font-mono);letter-spacing:0.04em">remove key ✕</button>
+      </div>
+
+      <div class="chart-toolbar">
+        <div style="display:flex;gap:7px">
+          <button class="chart-btn active" id="btn-line"   onclick="switchChartType('line')">📈 Line</button>
+          <button class="chart-btn candle" id="btn-candle" onclick="switchChartType('candle')">🕯 Candlestick</button>
+        </div>
+        <span style="font-size:10px;color:var(--text3);font-family:var(--font-mono);letter-spacing:0.06em">HOVER TO INSPECT · 252 TRADING DAYS</span>
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-overlay" id="chart-overlay">
+          <div class="spinner"></div> Search a ticker above to load the chart
+        </div>
+        <canvas id="price-chart"></canvas>
+      </div>
+
+      <div class="chart-stats-row" id="chart-stats" style="display:none">
+        <div class="chart-stat">
+          <span class="chart-stat-label">1Y High</span>
+          <span class="chart-stat-value" id="cs-high">—</span>
+        </div>
+        <div class="chart-stat">
+          <span class="chart-stat-label">1Y Low</span>
+          <span class="chart-stat-value" id="cs-low">—</span>
+        </div>
+        <div class="chart-stat">
+          <span class="chart-stat-label">1Y Return</span>
+          <span class="chart-stat-value" id="cs-return">—</span>
+        </div>
+        <div class="chart-stat">
+          <span class="chart-stat-label">Avg Daily Vol</span>
+          <span class="chart-stat-value" id="cs-vol">—</span>
+        </div>
+        <div class="chart-stat">
+          <span class="chart-stat-label">Trading Days</span>
+          <span class="chart-stat-value" id="cs-pts">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quote + Profile -->
+    <div class="markets-grid">
+      <div class="card">
+        <div class="section-label">📊 Live Quote</div>
+        <div id="quote-result"><div class="api-empty">Enter a ticker above</div></div>
+      </div>
+      <div class="card">
+        <div class="section-label">🏢 Company Profile</div>
+        <div id="profile-result"><div class="api-empty">Profile loads with quote</div></div>
+      </div>
+    </div>
+
+    <!-- News -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Market News</span>
+        <span class="card-badge" id="news-ticker-label">general</span>
+      </div>
+      <div class="accent-bar" style="background:var(--history)"></div>
+      <div id="market-news-result"><div class="api-empty">Loading latest market news…</div></div>
+    </div>
+
+  </div><!-- /finnhub-main -->
+  <div class="page-end"></div>
+</div>
+
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script src="../main.js"></script>
+<script>
+// ── State ────────────────────────────────────────────
+let _chartInstance = null;
+let _chartData     = null;
+let _chartType     = 'line';
+
+// ── Key management ───────────────────────────────────
+function getFinnhubKey() { return localStorage.getItem('rh_finnhub_key'); }
+
+function saveFinnhubKey() {
+  const key = document.getElementById('finnhub-key-input')?.value?.trim();
+  if (!key) { alert('Please paste a valid API key.'); return; }
+  localStorage.setItem('rh_finnhub_key', key);
+  activateFinnhub(key);
+}
+
+function clearFinnhubKey() {
+  localStorage.removeItem('rh_finnhub_key');
+  document.getElementById('finnhub-setup').style.display = 'block';
+  document.getElementById('finnhub-main').style.display  = 'none';
+  const pill = document.getElementById('finnhub-pill');
+  if (pill) { pill.textContent = 'free key needed'; pill.style.cssText = 'background:rgba(184,92,58,0.15);color:var(--news);border-color:var(--news)'; }
+  document.getElementById('finnhub-key-input').value = '';
+}
+
+function activateFinnhub(key) {
+  document.getElementById('finnhub-setup').style.display = 'none';
+  document.getElementById('finnhub-main').style.display  = 'block';
+  const pill = document.getElementById('finnhub-pill');
+  if (pill) { pill.textContent = '✓ connected'; pill.style.cssText = 'background:rgba(122,171,69,0.12);color:var(--accent2);border-color:var(--accent)'; }
+  // Show AV key panel or ready banner
+  const avKey = getAvKey();
+  document.getElementById('av-setup').style.display = avKey ? 'none'  : 'block';
+  document.getElementById('av-ready').style.display = avKey ? 'flex'  : 'none';
+  if (!avKey) setChartOverlay('Enter your free Alpha Vantage key above to enable charts');
+  fetchMarketNews(key, 'general');
+}
+
+// ── Lookup ───────────────────────────────────────────
+async function lookupSymbol(sym) {
+  const input  = document.getElementById('symbol-input');
+  const symbol = (sym || input?.value || '').trim().toUpperCase();
+  if (!symbol) return;
+  if (input) input.value = symbol;
+  document.querySelectorAll('.wl-chip').forEach(c => c.classList.toggle('active', c.textContent === symbol));
+  const key = getFinnhubKey();
+  if (!key) return;
+  showLoading('quote-result');
+  showLoading('profile-result');
+  setChartOverlay(`<div class="spinner"></div>&nbsp; Loading 1-year chart for <strong style="color:var(--text)">${symbol}</strong>…`);
+  await Promise.all([fetchQuote(key, symbol), fetchProfile(key, symbol), fetchCandleData(key, symbol)]);
+  // Note: fetchCandleData uses Yahoo Finance internally (no key needed, no CORS issues)
+  fetchMarketNews(key, symbol);
+}
+
+// ── Quote ────────────────────────────────────────────
+async function fetchQuote(key, symbol) {
+  const el = document.getElementById('quote-result');
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(symbol)}&token=${key}`);
+    if (res.status === 401 || res.status === 403) { showKeyError('quote-result'); return; }
+    const d = await res.json();
+    if (!d || d.c === 0) { el.innerHTML = `<div class="api-empty">No quote for <strong style="color:var(--text)">${symbol}</strong>. Check ticker.</div>`; return; }
+    const dir  = d.d > 0 ? 'up' : d.d < 0 ? 'down' : 'flat';
+    const arr  = d.d > 0 ? '▲' : d.d < 0 ? '▼' : '—';
+    const sign = d.d > 0 ? '+' : '';
+    const utcMins   = new Date().getUTCHours()*60 + new Date().getUTCMinutes();
+    const isWeekday = new Date().getUTCDay() >= 1 && new Date().getUTCDay() <= 5;
+    const mktOpen   = isWeekday && utcMins >= 870 && utcMins < 1260;
+    el.innerHTML = `
+      <div class="quote-block">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <div class="quote-ticker">${symbol}</div>
+          <span class="market-status ${mktOpen?'open':'closed'}">${mktOpen?'OPEN':'CLOSED'}</span>
+        </div>
+        <div class="quote-name" id="quote-name-sub">Loading…</div>
+        <div class="quote-price ${dir}">$${d.c.toFixed(2)}</div>
+        <div class="quote-change ${dir}">${arr} ${sign}${d.d.toFixed(2)} (${sign}${d.dp.toFixed(2)}%)</div>
+        <div class="quote-stats">
+          <div class="quote-stat"><div class="quote-stat-label">Open</div><div class="quote-stat-value">$${d.o.toFixed(2)}</div></div>
+          <div class="quote-stat"><div class="quote-stat-label">High</div><div class="quote-stat-value">$${d.h.toFixed(2)}</div></div>
+          <div class="quote-stat"><div class="quote-stat-label">Low</div><div class="quote-stat-value">$${d.l.toFixed(2)}</div></div>
+          <div class="quote-stat"><div class="quote-stat-label">Prev Close</div><div class="quote-stat-value">$${d.pc.toFixed(2)}</div></div>
+          <div class="quote-stat"><div class="quote-stat-label">Change $</div><div class="quote-stat-value" style="color:var(--${dir==='up'?'science':dir==='down'?'news':'text2'})">${sign}$${d.d.toFixed(2)}</div></div>
+          <div class="quote-stat"><div class="quote-stat-label">Updated</div><div class="quote-stat-value" style="font-size:11px">${new Date(d.t*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</div></div>
+        </div>
+      </div>`;
+  } catch { showError('quote-result', 'Request failed.'); }
+}
+
+// ── Profile ──────────────────────────────────────────
+async function fetchProfile(key, symbol) {
+  const el = document.getElementById('profile-result');
+  try {
+    const res = await fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${encodeURIComponent(symbol)}&token=${key}`);
+    if (res.status === 401 || res.status === 403) { showKeyError('profile-result'); return; }
+    const p = await res.json();
+    if (!p || !p.name) { el.innerHTML = `<div class="api-empty">No profile for <strong style="color:var(--text)">${symbol}</strong>.</div>`; return; }
+    const sub = document.getElementById('quote-name-sub');
+    if (sub) sub.textContent = `${p.name} · ${p.exchange||''}`;
+    const lbl = document.getElementById('chart-symbol-label');
+    if (lbl) lbl.textContent = `— ${p.name}`;
+    const mcap = p.marketCapitalization
+      ? p.marketCapitalization >= 1000 ? `$${(p.marketCapitalization/1000).toFixed(1)}T` : `$${p.marketCapitalization.toFixed(0)}B`
+      : '—';
+    el.innerHTML = `
+      <div class="profile-block">
+        <div class="profile-header">
+          ${p.logo ? `<img class="profile-logo" src="${p.logo}" alt="${p.name}" onerror="this.style.display='none'">` : `<div class="profile-logo-placeholder">🏢</div>`}
+          <div><div class="profile-name">${p.name}</div><div class="profile-meta">${p.ticker} · ${p.exchange||''} · ${p.currency||'USD'}</div></div>
+        </div>
+        <div class="profile-tags">
+          <span class="profile-tag">${p.finnhubIndustry||'N/A'}</span>
+          <span class="profile-tag cap">Mkt Cap ${mcap}</span>
+          ${p.ipo?`<span class="profile-tag ipo">IPO ${p.ipo}</span>`:''}
+          ${p.exchange?`<span class="profile-tag ex">${p.exchange}</span>`:''}
+        </div>
+        ${p.weburl?`<div style="margin-bottom:12px"><a class="profile-link" href="${p.weburl}" target="_blank">🌐 ${p.weburl.replace(/^https?:\/\//,'')} →</a></div>`:''}
+        <div style="font-size:11px;color:var(--text3)">Shares Outstanding: <span style="color:var(--text2)">${p.shareOutstanding?(p.shareOutstanding/1000).toFixed(1)+'B':'—'}</span></div>
+      </div>`;
+  } catch { showError('profile-result', 'Request failed.'); }
+}
+
+// ── Chart data — Alpha Vantage TIME_SERIES_DAILY (proper CORS, free key) ──
+function getAvKey() { return localStorage.getItem('rh_av_key'); }
+
+function saveAvKey() {
+  const key = document.getElementById('av-key-input')?.value?.trim();
+  if (!key) { alert('Please paste a valid Alpha Vantage key.'); return; }
+  localStorage.setItem('rh_av_key', key);
+  document.getElementById('av-setup').style.display  = 'none';
+  document.getElementById('av-ready').style.display  = 'block';
+}
+
+function clearAvKey() {
+  localStorage.removeItem('rh_av_key');
+  document.getElementById('av-setup').style.display = 'block';
+  document.getElementById('av-ready').style.display = 'none';
+  document.getElementById('av-key-input').value = '';
+  _chartData = null;
+  destroyChart();
+  setChartOverlay('<div class="spinner"></div>&nbsp; Enter your Alpha Vantage key above to enable charts');
+  document.getElementById('chart-stats').style.display = 'none';
+}
+
+async function fetchCandleData(finnhubKey, symbol) {
+  const avKey = getAvKey();
+  if (!avKey) {
+    setChartOverlay('Enter your free Alpha Vantage key in the chart panel to enable charts →');
+    return;
+  }
+  try {
+    // compact = last 100 trading days (~5 months); use outputsize=full for 20 years (premium)
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&outputsize=compact&apikey=${avKey}`;
+    const res  = await fetch(url);
+    if (!res.ok) { setChartOverlay('Alpha Vantage request failed. Check connection.'); return; }
+    const json = await res.json();
+
+    // Rate limit hit
+    if (json?.Information || json?.Note) {
+      setChartOverlay('⚠ Alpha Vantage rate limit reached (25 req/day free). Try again tomorrow or upgrade.');
+      return;
+    }
+
+    const series = json?.['Time Series (Daily)'];
+    if (!series) { setChartOverlay(`No chart data for <strong style="color:var(--text)">${symbol}</strong>. Check ticker.`); return; }
+
+    // AV returns newest-first — reverse to chronological
+    const entries = Object.entries(series)
+      .sort(([a],[b]) => a < b ? -1 : 1)
+      .slice(-252); // cap at ~1 year of trading days
+
+    const labels  = entries.map(([date]) => {
+      const d = new Date(date);
+      return d.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'2-digit' });
+    });
+
+    _chartData = {
+      labels,
+      closes:  entries.map(([,v]) => parseFloat(v['4. close'])),
+      opens:   entries.map(([,v]) => parseFloat(v['1. open'])),
+      highs:   entries.map(([,v]) => parseFloat(v['2. high'])),
+      lows:    entries.map(([,v]) => parseFloat(v['3. low'])),
+      volumes: entries.map(([,v]) => parseInt(v['5. volume'])),
+    };
+
+    // Stats
+    const { closes, highs, lows, volumes } = _chartData;
+    const high1y = Math.max(...highs);
+    const low1y  = Math.min(...lows);
+    const ret1y  = (closes[closes.length-1] - closes[0]) / closes[0] * 100;
+    const avgVol = Math.round(volumes.reduce((a,b)=>a+b,0)/volumes.length);
+    const retDir = ret1y >= 0 ? 'up' : 'down';
+    document.getElementById('cs-high').textContent   = `$${high1y.toFixed(2)}`;
+    document.getElementById('cs-low').textContent    = `$${low1y.toFixed(2)}`;
+    document.getElementById('cs-return').textContent = `${ret1y>=0?'+':''}${ret1y.toFixed(1)}%`;
+    document.getElementById('cs-return').className   = `chart-stat-value ${retDir}`;
+    document.getElementById('cs-vol').textContent    = avgVol>=1e6?`${(avgVol/1e6).toFixed(1)}M`:`${(avgVol/1e3).toFixed(0)}K`;
+    document.getElementById('cs-pts').textContent    = closes.length;
+    document.getElementById('chart-stats').style.display = 'flex';
+
+    hideChartOverlay();
+    renderChart();
+  } catch {
+    setChartOverlay('Failed to load chart. Check your connection.');
+  }
+}
+
+// ── Chart rendering ───────────────────────────────────
+function switchChartType(type) {
+  _chartType = type;
+  document.getElementById('btn-line').classList.toggle('active',   type==='line');
+  document.getElementById('btn-candle').classList.toggle('active', type==='candle');
+  if (_chartData) renderChart();
+}
+
+function renderChart() {
+  if (!_chartData) return;
+  _chartType === 'line' ? renderLine() : renderCandle();
+}
+
+function destroyChart() {
+  if (_chartInstance) { _chartInstance.destroy(); _chartInstance = null; }
+}
+
+function sparseLabels(labels) {
+  const step = Math.max(1, Math.floor(labels.length / 9));
+  return labels.map((l, i) => i % step === 0 ? l : '');
+}
+
+// CSS variable reader (since Chart.js can't read CSS vars directly)
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function renderLine() {
+  destroyChart();
+  const { labels, closes } = _chartData;
+  const isUp    = closes[closes.length-1] >= closes[0];
+  const color   = isUp ? '#8fbe55' : '#b85c3a';
+  const fill    = isUp ? 'rgba(143,190,85,0.07)' : 'rgba(184,92,58,0.07)';
+  const ctx     = document.getElementById('price-chart').getContext('2d');
+
+  _chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sparseLabels(labels),
+      datasets: [{
+        label: 'Close',
+        data: closes,
+        borderColor: color,
+        borderWidth: 1.8,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: color,
+        pointHoverBorderColor: '#0e110c',
+        pointHoverBorderWidth: 2,
+        fill: true,
+        backgroundColor: fill,
+        tension: 0.25,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 500, easing: 'easeOutQuart' },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1f261a',
+          borderColor: 'rgba(139,167,90,0.35)',
+          borderWidth: 1,
+          titleColor: '#8fa070',
+          bodyColor: '#dde5c8',
+          padding: 10,
+          titleFont: { family:"'Courier Prime',monospace", size:11 },
+          bodyFont:  { family:"'Courier Prime',monospace", size:13, weight:'bold' },
+          callbacks: {
+            title: items => labels[items[0].dataIndex],
+            label: item  => ` $${item.raw.toFixed(2)}`,
+          }
+        },
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(139,167,90,0.05)', drawTicks:false },
+          ticks: { color:'#506040', font:{family:"'Courier Prime',monospace",size:10}, maxRotation:0, padding:6 },
+          border: { color:'rgba(139,167,90,0.1)' },
+        },
+        y: {
+          position: 'right',
+          grid: { color:'rgba(139,167,90,0.05)', drawTicks:false },
+          ticks: { color:'#506040', font:{family:"'Courier Prime',monospace",size:10}, callback: v=>`$${v.toFixed(0)}`, padding:8 },
+          border: { color:'rgba(139,167,90,0.1)' },
+        }
+      }
+    }
+  });
+}
+
+function renderCandle() {
+  destroyChart();
+  const { labels, closes, opens, highs, lows } = _chartData;
+  const ctx = document.getElementById('price-chart').getContext('2d');
+
+  // Custom candlestick plugin — draws over invisible bar chart
+  const candlePlugin = {
+    id: 'candle',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea, scales } = chart;
+      const xScale = scales.x;
+      const yScale = scales.y;
+      const barW   = Math.max(1.5, (chartArea.right - chartArea.left) / labels.length * 0.55);
+
+      ctx.save();
+      labels.forEach((_, i) => {
+        const x    = xScale.getPixelForValue(i);
+        const yO   = yScale.getPixelForValue(opens[i]);
+        const yC   = yScale.getPixelForValue(closes[i]);
+        const yH   = yScale.getPixelForValue(highs[i]);
+        const yL   = yScale.getPixelForValue(lows[i]);
+        const isUp = closes[i] >= opens[i];
+        const col  = isUp ? '#8fbe55' : '#b85c3a';
+        const fill = isUp ? 'rgba(143,190,85,0.72)' : 'rgba(184,92,58,0.72)';
+
+        // Wick (high–low)
+        ctx.strokeStyle = col;
+        ctx.lineWidth   = 1;
+        ctx.beginPath(); ctx.moveTo(x, yH); ctx.lineTo(x, yL); ctx.stroke();
+
+        // Body (open–close)
+        const bodyTop = Math.min(yO, yC);
+        const bodyH   = Math.max(1.5, Math.abs(yO - yC));
+        ctx.fillStyle   = fill;
+        ctx.strokeStyle = col;
+        ctx.lineWidth   = 0.7;
+        ctx.fillRect(x - barW/2, bodyTop, barW, bodyH);
+        ctx.strokeRect(x - barW/2, bodyTop, barW, bodyH);
+      });
+      ctx.restore();
+    }
+  };
+
+  _chartInstance = new Chart(ctx, {
+    type: 'bar',
+    plugins: [candlePlugin],
+    data: {
+      labels: sparseLabels(labels),
+      datasets: [{ data: closes, backgroundColor:'transparent', borderColor:'transparent', borderWidth:0 }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 350 },
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1f261a',
+          borderColor: 'rgba(139,167,90,0.35)',
+          borderWidth: 1,
+          titleColor: '#8fa070',
+          bodyColor: '#dde5c8',
+          padding: 10,
+          titleFont: { family:"'Courier Prime',monospace", size:11 },
+          bodyFont:  { family:"'Courier Prime',monospace", size:11 },
+          callbacks: {
+            title: items => labels[items[0].dataIndex],
+            label: item => {
+              const i   = item.dataIndex;
+              const dir = closes[i] >= opens[i] ? '▲' : '▼';
+              return [`  ${dir}  O $${opens[i].toFixed(2)}   C $${closes[i].toFixed(2)}`,
+                      `     H $${highs[i].toFixed(2)}   L $${lows[i].toFixed(2)}`];
+            }
+          }
+        },
+      },
+      scales: {
+        x: {
+          grid: { color:'rgba(139,167,90,0.05)', drawTicks:false },
+          ticks: { color:'#506040', font:{family:"'Courier Prime',monospace",size:10}, maxRotation:0, padding:6 },
+          border: { color:'rgba(139,167,90,0.1)' },
+        },
+        y: {
+          position: 'right',
+          min: Math.min(...lows)   * 0.978,
+          max: Math.max(...highs)  * 1.022,
+          grid: { color:'rgba(139,167,90,0.05)', drawTicks:false },
+          ticks: { color:'#506040', font:{family:"'Courier Prime',monospace",size:10}, callback: v=>`$${v.toFixed(0)}`, padding:8 },
+          border: { color:'rgba(139,167,90,0.1)' },
+        }
+      }
+    }
+  });
+}
+
+// ── Chart overlay helpers ─────────────────────────────
+function setChartOverlay(html) {
+  const ov = document.getElementById('chart-overlay');
+  if (ov) { ov.innerHTML = html; ov.style.display = 'flex'; }
+}
+function hideChartOverlay() {
+  const ov = document.getElementById('chart-overlay');
+  if (ov) ov.style.display = 'none';
+}
+
+// ── News ──────────────────────────────────────────────
+async function fetchMarketNews(key, category) {
+  const el = document.getElementById('market-news-result');
+  const label = document.getElementById('news-ticker-label');
+  if (!el) return;
+  const isSymbol = category !== 'general' && /^[A-Z.]+$/.test(category);
+  if (label) label.textContent = isSymbol ? category : 'general market';
+  showLoading('market-news-result');
+  try {
+    const url = isSymbol
+      ? `https://finnhub.io/api/v1/company-news?symbol=${encodeURIComponent(category)}&from=${daysAgo(7)}&to=${today()}&token=${key}`
+      : `https://finnhub.io/api/v1/news?category=general&token=${key}`;
+    const res   = await fetch(url);
+    if (res.status === 401 || res.status === 403) { showKeyError('market-news-result'); return; }
+    const items = await res.json();
+    if (!Array.isArray(items) || !items.length) {
+      el.innerHTML = `<div class="api-empty">No news found${isSymbol?` for <strong style="color:var(--text)">${category}</strong>`:''}</div>`; return;
+    }
+    el.innerHTML = items.slice(0,10).map((item,i)=>`
+      <div class="fin-news-item" style="animation-delay:${i*.04}s">
+        <div class="fin-news-category">${item.category||'markets'}</div>
+        <div class="fin-news-headline">${item.headline}</div>
+        ${item.summary?`<div class="fin-news-summary">${item.summary}</div>`:''}
+        <div class="fin-news-footer">
+          <span class="fin-news-source">${item.source||''} · ${item.datetime?formatDate(new Date(item.datetime*1000).toISOString()):''}</span>
+          ${item.url?`<a class="fin-news-link" href="${item.url}" target="_blank">Read →</a>`:''}
+        </div>
+      </div>`).join('');
+  } catch { showError('market-news-result','Request failed.'); }
+}
+
+function showKeyError(id) {
+  showError(id,'Invalid API key. <button onclick="clearFinnhubKey()" style="background:none;border:none;color:var(--accent2);cursor:pointer;font-family:var(--font-mono);font-size:12px">Re-enter →</button>');
+}
+function today()    { return new Date().toISOString().split('T')[0]; }
+function daysAgo(n) { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; }
+
+// ── Init ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const key = getFinnhubKey();
+  if (key) activateFinnhub(key);
+  document.getElementById('finnhub-key-input')?.addEventListener('keydown', e => { if (e.key==='Enter') saveFinnhubKey(); });
+  document.getElementById('symbol-input')?.addEventListener('keydown',      e => { if (e.key==='Enter') lookupSymbol(); });
+  document.getElementById('av-key-input')?.addEventListener('keydown',      e => { if (e.key==='Enter') saveAvKey(); });
+});
+</script>
+</body>
+</html>
