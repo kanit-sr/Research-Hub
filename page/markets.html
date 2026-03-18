@@ -130,6 +130,7 @@
       <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
       <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
       <a class="nav-link" href="markets.html"><span class="nav-icon">📈</span> Markets</a>
+      <a class="nav-link" href="fitness.html"><span class="nav-icon">💪</span> Fitness</a>
     </nav>
   </div>
 </header>
@@ -158,6 +159,18 @@
       <div class="setup-input-row">
         <input type="text" class="tool-input" id="finnhub-key-input" placeholder="Paste your Finnhub API key…">
         <button class="tool-btn" onclick="saveFinnhubKey()">Save Key</button>
+      </div>
+
+      <div style="height:10px"></div>
+      <p class="setup-title" style="font-size:13px">📊 Alpha Vantage Key (for charts)</p>
+      <p class="setup-desc" style="margin-bottom:10px">
+        Also free at
+        <a href="https://www.alphavantage.co/support/#api-key" target="_blank">alphavantage.co</a>
+        — optional now, required to load line/candlestick charts.
+      </p>
+      <div class="setup-input-row">
+        <input type="text" class="tool-input" id="av-key-input-setup" placeholder="Paste Alpha Vantage key…" style="font-size:12px">
+        <button class="tool-btn" onclick="saveAvKey()">Save Key</button>
       </div>
     </div>
   </div>
@@ -412,18 +425,25 @@ async function fetchProfile(key, symbol) {
 function getAvKey() { return localStorage.getItem('rh_av_key'); }
 
 function saveAvKey() {
-  const key = document.getElementById('av-key-input')?.value?.trim();
+  const key = (document.getElementById('av-key-input')?.value || document.getElementById('av-key-input-setup')?.value || '').trim();
   if (!key) { alert('Please paste a valid Alpha Vantage key.'); return; }
   localStorage.setItem('rh_av_key', key);
   document.getElementById('av-setup').style.display  = 'none';
   document.getElementById('av-ready').style.display  = 'block';
+  const chartInput = document.getElementById('av-key-input');
+  const setupInput = document.getElementById('av-key-input-setup');
+  if (chartInput) chartInput.value = '';
+  if (setupInput) setupInput.value = '';
 }
 
 function clearAvKey() {
   localStorage.removeItem('rh_av_key');
   document.getElementById('av-setup').style.display = 'block';
   document.getElementById('av-ready').style.display = 'none';
-  document.getElementById('av-key-input').value = '';
+  const chartInput = document.getElementById('av-key-input');
+  const setupInput = document.getElementById('av-key-input-setup');
+  if (chartInput) chartInput.value = '';
+  if (setupInput) setupInput.value = '';
   _chartData = null;
   destroyChart();
   setChartOverlay('<div class="spinner"></div>&nbsp; Enter your Alpha Vantage key above to enable charts');
@@ -736,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('finnhub-key-input')?.addEventListener('keydown', e => { if (e.key==='Enter') saveFinnhubKey(); });
   document.getElementById('symbol-input')?.addEventListener('keydown',      e => { if (e.key==='Enter') lookupSymbol(); });
   document.getElementById('av-key-input')?.addEventListener('keydown',      e => { if (e.key==='Enter') saveAvKey(); });
+  document.getElementById('av-key-input-setup')?.addEventListener('keydown', e => { if (e.key==='Enter') saveAvKey(); });
 });
 </script>
 </body>
