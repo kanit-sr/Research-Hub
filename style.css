@@ -3,7 +3,7 @@
    Vintage Green / Earth Tone Theme
 ═══════════════════════════════════════════ */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Courier+Prime:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Courier+Prime:wght@400;700&family=Sarabun:wght@300;400;600&display=swap');
 
 :root {
   /* Backgrounds */
@@ -729,10 +729,106 @@ header {
 
 .dict-result .word-title  { font-family: var(--font-head); font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
 .dict-result .phonetic    { font-size: 11px; color: var(--accent2); margin-bottom: 10px; letter-spacing: 0.06em; font-style: italic; }
-.dict-result .pos         { font-size: 11px; color: var(--history); font-style: italic; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+.dict-result .pos         { font-size: 11px; color: var(--history); font-style: italic; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 8px; }
 .dict-result .def         { color: var(--text2); font-size: 12.5px; margin-bottom: 5px; }
 .dict-result .example     { font-size: 11.5px; color: var(--text3); border-left: 2px solid var(--accent); padding-left: 10px; margin: 5px 0 10px; font-style: italic; }
 .dict-result .placeholder { color: var(--text3); font-size: 12px; text-align: center; padding: 22px 0; }
+
+/* Spell suggestions */
+.dict-not-found {
+  font-size: 12.5px;
+  color: var(--text3);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+.dict-not-found strong { color: var(--text); }
+
+.dict-suggest-row { display: flex; flex-wrap: wrap; gap: 7px; }
+
+.dict-suggest-chip {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border-bright);
+  background: var(--bg4);
+  color: var(--accent2);
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dict-suggest-chip span { font-size: 9px; opacity: 0.55; }
+.dict-suggest-chip:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--text); }
+
+/* ── Two-column EN / TH layout ── */
+.dict-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+@media (max-width: 700px) { .dict-cols { grid-template-columns: 1fr; } }
+
+.dict-col { padding: 4px 0; }
+
+.dict-col-en {
+  padding-right: 20px;
+  border-right: 1px solid var(--border);
+}
+
+.dict-col-th { padding-left: 20px; }
+
+.dict-col-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text3);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Thai overrides */
+.thai-word {
+  font-family: 'Sarabun', 'Noto Sans Thai', sans-serif !important;
+  font-size: 22px !important;
+  line-height: 1.45;
+}
+.thai-def     { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; font-size: 13px !important; line-height: 1.8; }
+.thai-example { font-family: 'Sarabun', 'Noto Sans Thai', sans-serif; font-size: 12px !important; }
+
+.thai-confidence-row { margin-bottom: 8px; }
+
+.thai-confidence {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  display: inline-block;
+}
+.thai-confidence.high { background: rgba(143,190,85,0.12); color: var(--science); border: 1px solid rgba(143,190,85,0.25); }
+.thai-confidence.low  { background: rgba(200,146,74,0.12);  color: var(--history); border: 1px solid rgba(200,146,74,0.25); }
+
+/* Thai loading skeleton */
+.thai-loading-block { padding-top: 4px; }
+
+.thai-skeleton {
+  height: 11px;
+  background: var(--bg4);
+  border-radius: 4px;
+  margin-bottom: 9px;
+  width: 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.35; }
+  50%       { opacity: 0.75; }
+}
 
 
 /* ══════════════════════════════════════════

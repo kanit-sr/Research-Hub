@@ -292,38 +292,222 @@ async function fetchGuardian(key, q) {
 
 
 // ─────────────────────────────────────────
-// DICTIONARY  (Free Dictionary API)
+// DICTIONARY
+//   • Free Dictionary API  → English definitions
+//   • Wikipedia Search API → spell suggestions
+//   • MyMemory API         → full Thai translation (word + every definition)
 // ─────────────────────────────────────────
+
+// Entry point — called by button / Enter key
 async function lookupWord() {
   const word = $('dict-input').value.trim();
   if (!word) return;
+  await performDictLookup(word);
+}
 
+// Click a suggestion chip → fill input and re-lookup
+function dictSuggest(word) {
+  $('dict-input').value = word;
+  performDictLookup(word);
+}
+
+// Core lookup logic
+async function performDictLookup(word) {
   const el = $('dict-result');
   el.innerHTML = `<div class="loading"><div class="spinner"></div> Looking up…</div>`;
 
+  // ── Step 1: try dictionary API ──
+  let entry = null;
   try {
-    const res  = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
-    if (!res.ok) throw new Error('not found');
+    const res = await fetch(
+      `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      entry = data[0];
+    }
+  } catch { /* handled below */ }
 
-    const data     = await res.json();
-    const entry    = data[0];
-    const phonetic = entry.phonetics?.find(p => p.text)?.text || '';
+  // ── Step 2: if not found, fetch spelling suggestions ──
+  if (!entry) {
+    const suggestions = await fetchSpellSuggestions(word);
+    if (suggestions.length > 0) {
+      const chips = suggestions
+        .map(s => `<button class="dict-suggest-chip" onclick="dictSuggest('${s.replace(/'/g,"\\'")}')"><span>✦</span>${s}</button>`)
+        .join('');
+      el.innerHTML = `
+        <div class="dict-not-found">
+          ไม่พบคำว่า "<strong>${word}</strong>" — Did you mean:
+        </div>
+        <div class="dict-suggest-row">${chips}</div>`;
+    } else {
+      el.innerHTML = `<div class="placeholder">No results found for "<strong style="color:var(--text)">${word}</strong>"</div>`;
+    }
+    return;
+  }
 
-    let html = `<div class="word-title">${entry.word}</div>`;
-    if (phonetic) html += `<div class="phonetic">${phonetic}</div>`;
+  // ── Step 3: collect all texts that need translating ──
+  // We batch everything into ONE API call using "|||" as a separator,
+  // then split the translated result back apart.
+  // Slots: [0] = word, [1..N] = definitions in order
+  const SEP = ' ||| ';
+  const texts = [entry.word]; // slot 0 = the word itself
 
-    entry.meanings.slice(0, 3).forEach(m => {
-      html += `<div class="pos">${m.partOfSpeech}</div>`;
+  // Also build a flat map so we know which slot = which pos/def
+  // Structure: { posIndex, defIndex } per text slot (starting at index 1)
+  const slotMeta = []; // index = slot number - 1 (since slot 0 is the word)
+
+  const meanings = entry.meanings.slice(0, 3);
+  meanings.forEach((m, pi) => {
+    m.definitions.slice(0, 2).forEach((d, di) => {
+      texts.push(d.definition);
+      slotMeta.push({ posIndex: pi, defIndex: di, hasExample: !!d.example, example: d.example || '' });
+      if (d.example) {
+        texts.push(d.example);
+        slotMeta.push({ posIndex: pi, defIndex: di, isExample: true });
+      }
+    });
+  });
+
+  // ── Step 4: render English side ──
+  const phonetic = entry.phonetics?.find(p => p.text)?.text || '';
+  let html = `<div class="dict-cols">`;
+
+  // Left column — English
+  html += `<div class="dict-col dict-col-en">`;
+  html += `<div class="dict-col-label">🇬🇧 English</div>`;
+  html += `<div class="word-title">${entry.word}</div>`;
+  if (phonetic) html += `<div class="phonetic">${phonetic}</div>`;
+  meanings.forEach(m => {
+    html += `<div class="pos">${m.partOfSpeech}</div>`;
+    m.definitions.slice(0, 2).forEach(d => {
+      html += `<div class="def">• ${d.definition}</div>`;
+      if (d.example) html += `<div class="example">"${d.example}"</div>`;
+    });
+  });
+  html += `</div>`; // end en col
+
+  // Right column — Thai (skeleton loading state)
+  html += `<div class="dict-col dict-col-th" id="thai-col">`;
+  html += `<div class="dict-col-label">🇹🇭 ภาษาไทย</div>`;
+  html += `<div class="thai-loading-block">
+    <div class="loading" style="padding:10px 0;justify-content:flex-start;gap:8px">
+      <div class="spinner"></div>
+      <span style="font-size:12px;color:var(--text3)">กำลังแปล…</span>
+    </div>
+    <div class="thai-skeleton"></div>
+    <div class="thai-skeleton" style="width:80%"></div>
+    <div class="thai-skeleton" style="width:65%"></div>
+  </div>`;
+  html += `</div>`; // end th col
+
+  html += `</div>`; // end dict-cols
+  el.innerHTML = html;
+
+  // ── Step 5: batch-translate everything, then render Thai column ──
+  fetchThaiFullEntry(entry, meanings, texts, slotMeta);
+}
+
+// Wikipedia spellcheck — returns array of suggested words
+async function fetchSpellSuggestions(word) {
+  try {
+    const url = `https://en.wikipedia.org/w/api.php?` +
+      `action=query&list=search&srsearch=${encodeURIComponent(word)}` +
+      `&srinfo=suggestion&srprop=&srlimit=3&format=json&origin=*`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const suggestions = [];
+
+    const wikSuggest = data?.query?.searchinfo?.suggestion;
+    if (wikSuggest) suggestions.push(wikSuggest);
+
+    const hits = data?.query?.search || [];
+    hits.forEach(h => {
+      const t = h.title;
+      if (!suggestions.map(s=>s.toLowerCase()).includes(t.toLowerCase()) &&
+          t.toLowerCase() !== word.toLowerCase()) {
+        suggestions.push(t);
+      }
+    });
+
+    return suggestions.slice(0, 4);
+  } catch {
+    return [];
+  }
+}
+
+// Translate one string via MyMemory (EN→TH)
+async function translateToThai(text) {
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|th`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    const t    = data?.responseData?.translatedText;
+    // MyMemory sometimes echoes back the input on failure
+    if (!t || t.trim().toLowerCase() === text.trim().toLowerCase()) return null;
+    return { text: t, quality: data?.responseData?.match ?? 0 };
+  } catch {
+    return null;
+  }
+}
+
+// Full Thai entry — translate word + all definitions, then render
+async function fetchThaiFullEntry(entry, meanings, texts, slotMeta) {
+  const col = $('thai-col');
+  if (!col) return;
+
+  try {
+    // Translate all texts in parallel (MyMemory allows concurrent calls)
+    const results = await Promise.all(texts.map(t => translateToThai(t)));
+
+    const wordTh     = results[0]?.text || entry.word;
+    const wordQuality = results[0]?.quality ?? 0;
+
+    // Build Thai column HTML
+    let html = `<div class="dict-col-label">🇹🇭 ภาษาไทย</div>`;
+
+    // Thai word title + confidence badge
+    html += `<div class="word-title thai-word">${wordTh}</div>`;
+    html += `<div class="thai-confidence-row">
+      ${wordQuality >= 0.75
+        ? `<span class="thai-confidence high">✓ แม่นยำ</span>`
+        : `<span class="thai-confidence low">~ โดยประมาณ</span>`}
+    </div>`;
+
+    // Thai definitions mirroring the English structure
+    let slotIdx = 1; // results[0] was the word
+
+    meanings.forEach(m => {
+      // Translate part-of-speech label
+      const posMap = {
+        noun: 'คำนาม', verb: 'คำกริยา', adjective: 'คำคุณศัพท์',
+        adverb: 'คำกริยาวิเศษณ์', pronoun: 'คำสรรพนาม',
+        preposition: 'คำบุพบท', conjunction: 'คำสันธาน',
+        interjection: 'คำอุทาน', article: 'article', exclamation: 'คำอุทาน',
+      };
+      const posThLabel = posMap[m.partOfSpeech.toLowerCase()] || m.partOfSpeech;
+      html += `<div class="pos">${posThLabel}</div>`;
+
       m.definitions.slice(0, 2).forEach(d => {
-        html += `<div class="def">• ${d.definition}</div>`;
-        if (d.example) html += `<div class="example">"${d.example}"</div>`;
+        const defTh = results[slotIdx]?.text;
+        html += `<div class="def thai-def">• ${defTh || '<span style="color:var(--text3)">—</span>'}</div>`;
+        slotIdx++;
+
+        if (d.example) {
+          const exTh = results[slotIdx]?.text;
+          if (exTh) html += `<div class="example thai-example">"${exTh}"</div>`;
+          slotIdx++;
+        }
       });
     });
 
-    el.innerHTML = html;
+    col.innerHTML = html;
 
-  } catch {
-    el.innerHTML = `<div class="placeholder">No definition found for "<strong style="color:var(--text)">${word}</strong>"</div>`;
+  } catch (err) {
+    col.innerHTML = `
+      <div class="dict-col-label">🇹🇭 ภาษาไทย</div>
+      <div style="font-size:12px;color:var(--text3);padding:12px 0">ไม่สามารถแปลได้ในขณะนี้</div>`;
+    console.error('Thai translation error:', err);
   }
 }
 
