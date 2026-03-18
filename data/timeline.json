@@ -1,0 +1,58 @@
+[
+  { "year": -300000, "topic": "evolution", "event": "Early Homo sapiens appear" },
+  { "year": -70000, "topic": "evolution", "event": "Cognitive revolution in Homo sapiens" },
+  { "year": -10000, "topic": "history", "event": "Agricultural Revolution begins" },
+  { "year": -2560, "topic": "history", "event": "Great Pyramid of Giza completed" },
+  { "year": -776, "topic": "history", "event": "First Olympic Games in ancient Greece" },
+  { "year": -509, "topic": "history", "event": "Roman Republic established" },
+  { "year": -27, "topic": "history", "event": "Roman Empire begins under Augustus" },
+
+  { "year": 105, "topic": "technology", "event": "Paper invented in China" },
+  { "year": 476, "topic": "history", "event": "Fall of Western Roman Empire" },
+  { "year": 800, "topic": "history", "event": "Charlemagne crowned Holy Roman Emperor" },
+  { "year": 1096, "topic": "history", "event": "First Crusade begins" },
+  { "year": 1215, "topic": "politics", "event": "Magna Carta signed" },
+  { "year": 1347, "topic": "medicine", "event": "Black Death spreads across Europe" },
+
+  { "year": 1440, "topic": "technology", "event": "Printing press invented by Gutenberg" },
+  { "year": 1492, "topic": "exploration", "event": "Columbus reaches the Americas" },
+  { "year": 1517, "topic": "history", "event": "Protestant Reformation begins" },
+  { "year": 1543, "topic": "physics", "event": "Copernicus proposes heliocentric model" },
+  { "year": 1609, "topic": "physics", "event": "Galileo improves telescope for astronomy" },
+  { "year": 1687, "topic": "physics", "event": "Newton publishes Principia" },
+
+  { "year": 1769, "topic": "technology", "event": "Watt improves steam engine" },
+  { "year": 1776, "topic": "politics", "event": "American Declaration of Independence" },
+  { "year": 1789, "topic": "history", "event": "French Revolution begins" },
+  { "year": 1800, "topic": "technology", "event": "Volta invents electric battery" },
+  { "year": 1837, "topic": "technology", "event": "Telegraph invented by Morse" },
+  { "year": 1859, "topic": "evolution", "event": "Darwin publishes On the Origin of Species" },
+  { "year": 1869, "topic": "technology", "event": "Transcontinental Railroad completed" },
+
+  { "year": 1903, "topic": "technology", "event": "Wright brothers achieve first powered flight" },
+  { "year": 1914, "topic": "history", "event": "World War I begins" },
+  { "year": 1928, "topic": "medicine", "event": "Penicillin discovered by Fleming" },
+  { "year": 1939, "topic": "history", "event": "World War II begins" },
+  { "year": 1945, "topic": "history", "event": "World War II ends" },
+  { "year": 1947, "topic": "technology", "event": "Transistor invented" },
+
+  { "year": 1953, "topic": "biology", "event": "DNA double helix structure discovered" },
+  { "year": 1957, "topic": "space", "event": "Sputnik 1 launched" },
+  { "year": 1961, "topic": "space", "event": "First human in space" },
+  { "year": 1969, "topic": "space", "event": "Apollo 11 Moon landing" },
+  { "year": 1971, "topic": "technology", "event": "First microprocessor developed" },
+
+  { "year": 1989, "topic": "internet", "event": "World Wide Web invented" },
+  { "year": 1991, "topic": "internet", "event": "Web made publicly available" },
+  { "year": 1997, "topic": "ai", "event": "Deep Blue defeats Kasparov" },
+  { "year": 1998, "topic": "internet", "event": "Google founded" },
+
+  { "year": 2001, "topic": "technology", "event": "Wikipedia launched" },
+  { "year": 2007, "topic": "technology", "event": "iPhone released" },
+  { "year": 2012, "topic": "ai", "event": "Deep learning breakthrough with AlexNet" },
+  { "year": 2015, "topic": "ai", "event": "AlphaGo defeats Lee Sedol" },
+
+  { "year": 2020, "topic": "medicine", "event": "mRNA vaccines deployed globally" },
+  { "year": 2022, "topic": "ai", "event": "ChatGPT released" },
+  { "year": 2024, "topic": "ai", "event": "Multimodal AI systems become widespread" }
+]

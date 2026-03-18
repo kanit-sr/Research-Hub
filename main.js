@@ -2,6 +2,7 @@
    Research Hub — main.js  (shared across all pages)
 ═══════════════════════════════════════════ */
 
+
 // ─────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────
@@ -419,106 +420,59 @@ async function fetchThaiFullEntry(entry, meanings, texts) {
 // ─────────────────────────────────────────
 // TIMELINE
 // ─────────────────────────────────────────
-window.timelines = {
-  'space exploration': [
-    {year:'1957',event:'Sputnik 1 — first artificial satellite launched by the USSR'},
-    {year:'1961',event:'Yuri Gagarin becomes the first human in space'},
-    {year:'1969',event:'Apollo 11 — humans land on the Moon for the first time'},
-    {year:'1971',event:'Salyut 1: first space station launched into orbit'},
-    {year:'1977',event:'Voyager 1 & 2 launched toward the outer solar system'},
-    {year:'1990',event:'Hubble Space Telescope deployed from Space Shuttle Discovery'},
-    {year:'1998',event:'International Space Station assembly begins'},
-    {year:'2004',event:'Mars rovers Spirit & Opportunity land on the Martian surface'},
-    {year:'2020',event:'SpaceX Crew Dragon — first commercial crewed spaceflight'},
-    {year:'2021',event:'James Webb Space Telescope launched on Christmas Day'},
-  ],
-  'artificial intelligence': [
-    {year:'1950',event:'Alan Turing publishes "Computing Machinery and Intelligence"'},
-    {year:'1956',event:'Dartmouth Conference coins the term "Artificial Intelligence"'},
-    {year:'1997',event:'IBM Deep Blue defeats chess world champion Garry Kasparov'},
-    {year:'2012',event:'AlexNet wins ImageNet — the deep learning revolution begins'},
-    {year:'2016',event:'AlphaGo defeats Go world champion Lee Sedol 4–1'},
-    {year:'2017',event:'"Attention Is All You Need" — the Transformer architecture introduced'},
-    {year:'2020',event:'GPT-3 released by OpenAI with 175 billion parameters'},
-    {year:'2022',event:'ChatGPT launches, bringing AI into mainstream consciousness'},
-    {year:'2024',event:'Multimodal AI models and AI agents become widespread'},
-  ],
-  'medicine': [
-    {year:'1796',event:'Edward Jenner develops the first smallpox vaccine'},
-    {year:'1847',event:'Ignaz Semmelweis discovers handwashing prevents disease spread'},
-    {year:'1895',event:'Wilhelm Röntgen discovers X-rays'},
-    {year:'1928',event:'Alexander Fleming discovers penicillin'},
-    {year:'1953',event:'Watson & Crick describe the double helix structure of DNA'},
-    {year:'1967',event:'First successful heart transplant by Christiaan Barnard'},
-    {year:'2003',event:'Human Genome Project completed, mapping all human genes'},
-    {year:'2021',event:'First mRNA vaccines approved and deployed globally'},
-  ],
-  'internet': [
-    {year:'1969',event:'ARPANET — first message sent between UCLA and Stanford'},
-    {year:'1983',event:'TCP/IP protocol adopted — the modern internet is born'},
-    {year:'1991',event:'Tim Berners-Lee publishes the World Wide Web'},
-    {year:'1998',event:'Google founded by Brin and Page at Stanford'},
-    {year:'2004',event:'Facebook launches; the Web 2.0 era begins'},
-    {year:'2007',event:'iPhone launches, starting the mobile internet revolution'},
-    {year:'2023',event:'Generative AI reshapes how people search and use the web'},
-  ],
-  'evolution': [
-    {year:'1859',event:'Charles Darwin publishes "On the Origin of Species"'},
-    {year:'1865',event:'Gregor Mendel establishes laws of hereditary genetics'},
-    {year:'1953',event:'DNA structure discovered — mechanism of inheritance revealed'},
-    {year:'1974',event:'"Lucy" fossil found — a 3.2 million year old hominid'},
-    {year:'2003',event:'Human Genome Project reveals ~20,000 human genes'},
-    {year:'2015',event:'CRISPR-Cas9 enables direct DNA modification'},
-    {year:'2022',event:'Svante Pääbo wins Nobel Prize for ancient DNA research'},
-  ],
-  'climate': [
-    {year:'1824',event:'Joseph Fourier first describes the greenhouse effect'},
-    {year:'1958',event:'Charles Keeling begins CO₂ monitoring at Mauna Loa'},
-    {year:'1988',event:'James Hansen testifies on global warming to US Congress'},
-    {year:'1997',event:'Kyoto Protocol — first binding emissions reduction treaty'},
-    {year:'2015',event:'Paris Agreement: 196 nations commit to limit warming'},
-    {year:'2021',event:'IPCC Sixth Report warns of "code red for humanity"'},
-    {year:'2023',event:'Hottest year on record; temperatures breach 1.5°C'},
-  ],
-  'physics': [
-    {year:'1687',event:'Isaac Newton publishes Principia — laws of motion & gravity'},
-    {year:'1865',event:'Maxwell unifies electricity, magnetism, and light'},
-    {year:'1905',event:'Einstein\'s miracle year — special relativity and E=mc²'},
-    {year:'1915',event:'Einstein publishes General Theory of Relativity'},
-    {year:'1927',event:'Heisenberg\'s Uncertainty Principle established'},
-    {year:'2012',event:'Higgs boson discovered at CERN\'s LHC'},
-    {year:'2015',event:'LIGO detects gravitational waves for the first time'},
-    {year:'2019',event:'First photograph of a black hole captured'},
-  ],
+
+window.timelineDB = [];
+
+async function initTimelineDB() {
+  try {
+    const res = await fetch('../data/timeline.json');
+    window.timelineDB = await res.json();
+  } catch {
+    window.timelineDB = [];
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initTimelineDB);
+
+
+const topicAliases = {
+  'space exploration': 'space',
+  'artificial intelligence': 'ai',
+  'internet': 'technology',
+  'physics': 'physics',
+  'history': 'history'
 };
+
+function formatYear(y) {
+  return y < 0 ? `${Math.abs(y)} BCE` : y;
+}
 
 function loadTimeline(topic) {
   const input = $('tl-input');
-  const q     = topic || input?.value.trim().toLowerCase();
-  const el    = $('tl-result');
-  if (!q || !el) return;
+  const el = $('tl-result');
+  if (!el) return;
 
+  let q = (topic || input?.value || '').toLowerCase().trim();
+  if (!q) return;
+
+  const normalized = topicAliases[q] || q;
   if (input) input.value = q;
 
-  // Highlight active topic button
-  document.querySelectorAll('.tl-topic-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.topic === q);
-  });
+  const results = window.timelineDB
+    .filter(e => e.topic === normalized || normalized === 'all')
+    .sort((a, b) => a.year - b.year);
 
-  let match = null;
-  for (const key of Object.keys(window.timelines)) {
-    if (key === q || key.includes(q) || q.includes(key) || key.split(' ').some(w => q.includes(w))) { match = key; break; }
+  if (!results.length) {
+    el.innerHTML = `<div class="api-empty">No timeline for "${q}"</div>`;
+    return;
   }
 
-  if (match) {
-    el.innerHTML = window.timelines[match].map((item, i) => `
-      <div class="tl-item" style="animation-delay:${i*.045}s">
-        <span class="tl-year">${item.year}</span>
-        <span class="tl-event">${item.event}</span>
-      </div>`).join('');
-  } else {
-    el.innerHTML = `<div class="api-empty">No timeline for "<strong style="color:var(--text)">${q}</strong>". Try the topic buttons above.</div>`;
-  }
+  el.innerHTML = results.map((item, i) => `
+    <div class="tl-item" style="animation-delay:${i * 0.02}s">
+      <span class="tl-year">${formatYear(item.year)}</span>
+      <span class="tl-event">${item.event}</span>
+    </div>
+  `).join('');
 }
 
 // ─────────────────────────────────────────
