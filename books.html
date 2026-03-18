@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Books — Research Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="nav-logo" href="index.html">
+      <span class="nav-logo-text">Research Hub</span>
+      <span class="nav-logo-stamp">est. today</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span> Home</a>
+      <a class="nav-link" href="wikipedia.html"><span class="nav-icon">📖</span> Wikipedia</a>
+      <a class="nav-link" href="books.html"><span class="nav-icon">📚</span> Books</a>
+      <a class="nav-link" href="news.html"><span class="nav-icon">📡</span> News</a>
+      <a class="nav-link" href="dictionary.html"><span class="nav-icon">🔤</span> Dictionary</a>
+      <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
+      <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-hero">
+    <p class="page-eyebrow">open library api · no key</p>
+    <h1 class="page-title"><em>Books</em> Search</h1>
+    <p class="page-sub">Search millions of books — see which ones you can read free or borrow</p>
+  </div>
+
+  <!-- Legend -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">
+    <span class="book-avail free">✦ Free to read</span>
+    <span style="font-size:11px;color:var(--text3);align-self:center">= public domain, open immediately</span>
+    <span class="book-avail borrow" style="margin-left:12px">⟳ Borrow free</span>
+    <span style="font-size:11px;color:var(--text3);align-self:center">= free Internet Archive account required</span>
+    <span class="book-avail preview" style="margin-left:12px">◈ Preview</span>
+    <span style="font-size:11px;color:var(--text3);align-self:center">= limited pages viewable</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Search Books</span>
+      <span class="api-pill">open library api</span>
+    </div>
+    <div class="accent-bar" style="background:var(--history)"></div>
+    <div class="input-row">
+      <input type="text" class="tool-input" id="books-input" placeholder="Search books, authors, subjects…"
+        onkeydown="if(event.key==='Enter') searchBooks()">
+      <button class="tool-btn" onclick="searchBooks()">Search →</button>
+    </div>
+    <div id="books-results">
+      <div class="api-empty">Search above — try "Sherlock Holmes", "Darwin", or "Einstein"</div>
+    </div>
+  </div>
+
+  <div class="page-end"></div>
+</div>
+
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script src="main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  attachSuggest('books-input', {
+    onSelect: v => { $('books-input').value = v; searchBooks(); },
+    onEnter:  () => searchBooks(),
+  });
+});
+</script>
+</body>
+</html>

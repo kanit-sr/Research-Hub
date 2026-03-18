@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictionary — Research Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="nav-logo" href="index.html">
+      <span class="nav-logo-text">Research Hub</span>
+      <span class="nav-logo-stamp">est. today</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span> Home</a>
+      <a class="nav-link" href="wikipedia.html"><span class="nav-icon">📖</span> Wikipedia</a>
+      <a class="nav-link" href="books.html"><span class="nav-icon">📚</span> Books</a>
+      <a class="nav-link" href="news.html"><span class="nav-icon">📡</span> News</a>
+      <a class="nav-link" href="dictionary.html"><span class="nav-icon">🔤</span> Dictionary</a>
+      <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
+      <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-hero">
+    <p class="page-eyebrow">free dictionary api + mymemory api</p>
+    <h1 class="page-title">EN ↔ <em>TH</em> Dictionary</h1>
+    <p class="page-sub">English definitions with full Thai translation — typos suggested automatically</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Look Up a Word</span>
+      <span class="api-pill">live api · no key</span>
+    </div>
+    <div class="accent-bar" style="background:var(--health)"></div>
+    <div class="input-row">
+      <input type="text" class="tool-input" id="dict-input" placeholder="Enter a word…"
+        onkeydown="if(event.key==='Enter') lookupWord()">
+      <button class="tool-btn" onclick="lookupWord()">Define →</button>
+    </div>
+    <div class="dict-result" id="dict-result">
+      <div class="placeholder">Enter a word above — definitions appear in English and Thai side by side</div>
+    </div>
+  </div>
+
+  <div class="page-end"></div>
+</div>
+
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script src="main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  attachSuggest('dict-input', {
+    onSelect: v => { $('dict-input').value = v; performDictLookup(v); },
+    onEnter:  () => lookupWord(),
+  });
+});
+</script>
+</body>
+</html>

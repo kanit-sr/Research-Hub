@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wikipedia — Research Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="nav-logo" href="index.html">
+      <span class="nav-logo-text">Research Hub</span>
+      <span class="nav-logo-stamp">est. today</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span> Home</a>
+      <a class="nav-link" href="wikipedia.html"><span class="nav-icon">📖</span> Wikipedia</a>
+      <a class="nav-link" href="books.html"><span class="nav-icon">📚</span> Books</a>
+      <a class="nav-link" href="news.html"><span class="nav-icon">📡</span> News</a>
+      <a class="nav-link" href="dictionary.html"><span class="nav-icon">🔤</span> Dictionary</a>
+      <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
+      <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-hero">
+    <p class="page-eyebrow">open api · no key</p>
+    <h1 class="page-title"><em>Wikipedia</em> Search</h1>
+    <p class="page-sub">Search millions of articles — live results pulled directly from Wikipedia</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Search Articles</span>
+      <span class="api-pill">wikipedia api</span>
+    </div>
+    <div class="accent-bar" style="background:var(--science)"></div>
+    <div class="input-row">
+      <input type="text" class="tool-input" id="wiki-input" placeholder="Search Wikipedia…"
+        onkeydown="if(event.key==='Enter') searchWikipedia()">
+      <button class="tool-btn" onclick="searchWikipedia()">Search →</button>
+    </div>
+    <div id="wiki-results">
+      <div class="api-empty">Enter a topic above to search Wikipedia articles</div>
+    </div>
+  </div>
+
+  <div class="page-end"></div>
+</div>
+
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script src="main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  attachSuggest('wiki-input', {
+    onSelect: v => { $('wiki-input').value = v; searchWikipedia(); },
+    onEnter:  () => searchWikipedia(),
+  });
+});
+</script>
+</body>
+</html>

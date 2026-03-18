@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>News — Research Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="nav-logo" href="index.html">
+      <span class="nav-logo-text">Research Hub</span>
+      <span class="nav-logo-stamp">est. today</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span> Home</a>
+      <a class="nav-link" href="wikipedia.html"><span class="nav-icon">📖</span> Wikipedia</a>
+      <a class="nav-link" href="books.html"><span class="nav-icon">📚</span> Books</a>
+      <a class="nav-link" href="news.html"><span class="nav-icon">📡</span> News</a>
+      <a class="nav-link" href="dictionary.html"><span class="nav-icon">🔤</span> Dictionary</a>
+      <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
+      <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-hero">
+    <p class="page-eyebrow">the guardian api · free key</p>
+    <h1 class="page-title">Live <em>News</em></h1>
+    <p class="page-sub">Real headlines from The Guardian — search any topic</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">The Guardian</span>
+      <span class="api-pill" id="guardian-pill" style="background:rgba(184,92,58,0.15);color:var(--news);border-color:var(--news)">free key needed</span>
+    </div>
+    <div class="accent-bar" style="background:var(--news)"></div>
+
+    <!-- Key setup -->
+    <div id="guardian-setup">
+      <div class="setup-banner">
+        <p class="setup-title">🔑 Free API Key Required</p>
+        <p class="setup-desc">
+          Get yours free at
+          <a href="https://open-platform.theguardian.com/access/" target="_blank">open-platform.theguardian.com</a>
+          — takes 2 minutes, no credit card needed. Your key is saved locally and never leaves your browser.
+        </p>
+        <div class="setup-input-row">
+          <input type="text" class="tool-input" id="guardian-key-input" placeholder="Paste your Guardian API key…">
+          <button class="tool-btn" onclick="saveGuardianKey()">Save Key</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search (shown after key saved) -->
+    <div id="guardian-search" style="display:none">
+      <div class="input-row">
+        <input type="text" class="tool-input" id="guardian-input" placeholder="Search news topic…"
+          onkeydown="if(event.key==='Enter') searchGuardian()">
+        <button class="tool-btn" onclick="searchGuardian()">Search →</button>
+        <button class="tool-btn tool-btn-sm" onclick="clearGuardianKey()" title="Remove API key">✕</button>
+      </div>
+      <div id="guardian-results">
+        <div class="api-empty">Loading latest headlines…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-end"></div>
+</div>
+
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script src="main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  loadGuardianKey();
+  attachSuggest('guardian-input', {
+    onSelect: v => { $('guardian-input').value = v; searchGuardian(); },
+    onEnter:  () => searchGuardian(),
+  });
+  $('guardian-key-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') saveGuardianKey(); });
+});
+</script>
+</body>
+</html>

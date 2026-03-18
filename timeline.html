@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timeline — Research Hub</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-inner">
+    <a class="nav-logo" href="index.html">
+      <span class="nav-logo-text">Research Hub</span>
+      <span class="nav-logo-stamp">est. today</span>
+    </a>
+    <nav class="nav-links">
+      <a class="nav-link" href="index.html"><span class="nav-icon">⌂</span> Home</a>
+      <a class="nav-link" href="wikipedia.html"><span class="nav-icon">📖</span> Wikipedia</a>
+      <a class="nav-link" href="books.html"><span class="nav-icon">📚</span> Books</a>
+      <a class="nav-link" href="news.html"><span class="nav-icon">📡</span> News</a>
+      <a class="nav-link" href="dictionary.html"><span class="nav-icon">🔤</span> Dictionary</a>
+      <a class="nav-link" href="timeline.html"><span class="nav-icon">📅</span> Timeline</a>
+      <a class="nav-link" href="tools.html"><span class="nav-icon">🗒</span> Tools</a>
+    </nav>
+  </div>
+</header>
+
+<div class="container">
+  <div class="page-hero">
+    <p class="page-eyebrow">curated · 7 topics</p>
+    <h1 class="page-title">History <em>Timeline</em></h1>
+    <p class="page-sub">Key dates across science, technology, history, and culture</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Browse by Topic</span>
+      <span class="card-badge">curated</span>
+    </div>
+    <div class="accent-bar" style="background:var(--history)"></div>
+
+    <!-- Quick topic buttons -->
+    <div class="tl-topics" id="tl-topics">
+      <button class="tl-topic-btn" data-topic="space exploration"    onclick="loadTimeline('space exploration')">🚀 Space</button>
+      <button class="tl-topic-btn" data-topic="artificial intelligence" onclick="loadTimeline('artificial intelligence')">🤖 AI</button>
+      <button class="tl-topic-btn" data-topic="medicine"             onclick="loadTimeline('medicine')">🩺 Medicine</button>
+      <button class="tl-topic-btn" data-topic="internet"             onclick="loadTimeline('internet')">🌐 Internet</button>
+      <button class="tl-topic-btn" data-topic="evolution"            onclick="loadTimeline('evolution')">🧬 Evolution</button>
+      <button class="tl-topic-btn" data-topic="climate"              onclick="loadTimeline('climate')">🌍 Climate</button>
+      <button class="tl-topic-btn" data-topic="physics"              onclick="loadTimeline('physics')">⚛️ Physics</button>
+    </div>
+
+    <!-- Or type a topic -->
+    <div class="input-row">
+      <input type="text" class="tool-input" id="tl-input" placeholder="Or type a topic…"
+        onkeydown="if(event.key==='Enter') loadTimeline()">
+      <button class="tool-btn" onclick="loadTimeline()">Go →</button>
+    </div>
+
+    <div id="tl-result">
+      <div class="api-empty">Pick a topic above or type one to see the timeline</div>
+    </div>
+  </div>
+
+  <div class="page-end"></div>
+</div>
+
+<button id="scroll-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+<script src="main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  attachSuggest('tl-input', {
+    source:   'timeline',
+    onSelect: v => { $('tl-input').value = v; loadTimeline(v); },
+    onEnter:  () => loadTimeline(),
+  });
+});
+</script>
+</body>
+</html>
